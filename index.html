@@ -1,1 +1,277 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title>wheels4rent — Калькулятор аренды</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root{
+      --bg:#0b0d10;          /* глубокий тёмный */
+      --panel:#121417;       /* панель */
+      --text:#e9f1f5;        /* основной текст */
+      --muted:#a9b6bd;       /* вторичный текст */
+      --accent:#00e6ff;      /* яркий циан */
+      --accent-2:#00b8c8;    /* градиентный партнёр */
+      --danger:#ff4d4d;
+      --radius:8px;
+      --shadow:0 8px 24px rgba(0,230,255,0.12);
+      --line:#1f2328;
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,Arial,sans-serif}
+    .wrap{
+      max-width:440px; width:94%; margin:20px auto; padding:18px;
+      background:var(--panel); border-radius:12px; box-shadow:var(--shadow);
+      border:1px solid rgba(0,230,255,0.08);
+    }
+    .brand{
+      display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;
+    }
+    .brand .title{
+      font-size:18px; font-weight:700; letter-spacing:0.2px; color:var(--accent);
+      text-shadow:0 0 12px rgba(0,230,255,0.25);
+    }
+    .brand .badge{
+      font-size:12px; color:var(--muted); background:#0e1114; border:1px solid var(--line);
+      padding:6px 10px; border-radius:var(--radius);
+    }
 
+    /* Карусель */
+    .carousel{
+      position:relative; overflow:hidden; border-radius:var(--radius); background:#0e1114;
+      border:1px solid var(--line);
+    }
+    .carousel img{width:100%; display:block}
+    .nav{
+      position:absolute; inset:0; pointer-events:none;
+      display:flex; align-items:center; justify-content:space-between; padding:0 8px;
+    }
+    .nav button{
+      pointer-events:auto; width:36px; height:36px; border:none; border-radius:50%;
+      background:linear-gradient(135deg,var(--accent),var(--accent-2));
+      color:#001317; font-weight:800; cursor:pointer; box-shadow:0 6px 16px rgba(0,230,255,0.35);
+      transition:transform .15s ease, box-shadow .2s ease;
+    }
+    .nav button:hover{transform:translateY(-1px); box-shadow:0 8px 20px rgba(0,230,255,0.45)}
+    .caption{
+      display:flex; gap:10px; align-items:center; justify-content:space-between;
+      padding:10px 8px 0;
+    }
+    .car-name{font-size:14px; color:var(--muted)}
+    .car-price{font-size:14px; font-weight:700; color:var(--text)}
+    .choose{
+      margin-left:auto; padding:8px 12px; border:none; border-radius:var(--radius);
+      background:linear-gradient(90deg,var(--accent),var(--accent-2)); color:#001317; font-weight:700; cursor:pointer;
+      box-shadow:0 6px 16px rgba(0,230,255,0.25); transition:filter .2s ease, transform .15s ease;
+    }
+    .choose:hover{filter:brightness(1.05); transform:translateY(-1px)}
+
+    /* Формы */
+    .field{margin-top:14px}
+    .label{font-size:13px; color:var(--muted); margin-bottom:6px}
+    input[type="number"]{
+      width:100%; padding:12px; font-size:14px; color:var(--text);
+      background:#0e1114; border:1px solid var(--line); border-radius:var(--radius);
+      outline:none; transition:box-shadow .2s ease, border-color .2s ease, background .2s ease;
+    }
+    input[type="number"]:focus{
+      border-color:rgba(0,230,255,0.45);
+      box-shadow:0 0 0 4px rgba(0,230,255,0.15);
+      background:#101419;
+    }
+
+    .options{
+      margin-top:12px; padding:10px; border-radius:var(--radius);
+      background:#0e1114; border:1px solid var(--line);
+    }
+    .opt{display:flex; align-items:center; justify-content:space-between; padding:6px 0}
+    .opt label{display:flex; align-items:center; gap:8px; font-size:14px; color:var(--text)}
+    .opt .price{font-size:13px; color:var(--muted)}
+    input[type="checkbox"]{accent-color:var(--accent); width:18px; height:18px}
+    .divider{
+      height:1px; background:var(--line); border:none; margin:8px 0;
+    }
+
+    /* Кнопка расчёта */
+    .calc{
+      width:100%; margin-top:14px; padding:14px; border:none; border-radius:var(--radius);
+      background:linear-gradient(90deg,var(--accent),var(--accent-2)); color:#001317; font-weight:800; font-size:15px; cursor:pointer;
+      box-shadow:0 10px 24px rgba(0,230,255,0.28); transition:transform .15s ease, box-shadow .2s ease;
+    }
+    .calc:hover{transform:translateY(-1px); box-shadow:0 12px 28px rgba(0,230,255,0.36)}
+
+    /* Результат */
+    #result{margin-top:14px}
+    .row{display:flex; justify-content:space-between; align-items:center; padding:6px 0; color:var(--muted); font-size:14px}
+    .total{
+      margin-top:10px; padding:12px; border-radius:var(--radius);
+      background:#0e1114; border:1px solid rgba(0,230,255,0.35);
+      display:flex; justify-content:space-between; align-items:center;
+      color:var(--accent); font-weight:800; font-size:16px; text-shadow:0 0 10px rgba(0,230,255,0.25);
+    }
+
+    /* Мобильная адаптация */
+    @media (max-width:480px){
+      .wrap{padding:16px}
+      .brand .title{font-size:17px}
+      .choose{padding:7px 10px; font-size:12px}
+      .calc{padding:12px; font-size:14px}
+      .row{font-size:13px}
+      .total{font-size:15px}
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="brand">
+      <div class="title">Калькулятор аренды</div>
+      <div class="badge">wheels4rent.ru</div>
+    </div>
+
+    <!-- Карусель -->
+    <div class="carousel">
+      <img id="carImage" src="" alt="Авто" />
+      <div class="nav">
+        <button aria-label="Предыдущее" onclick="prevCar()">‹</button>
+        <button aria-label="Следующее" onclick="nextCar()">›</button>
+      </div>
+    </div>
+    <div class="caption">
+      <div class="car-name" id="carName"></div>
+      <div class="car-price" id="carPrice"></div>
+      <button class="choose" id="chooseBtn" onclick="chooseCar()">Выбрать</button>
+    </div>
+
+    <!-- Срок -->
+    <div class="field">
+      <div class="label">Срок аренды (дней)</div>
+      <input type="number" id="days" value="1" min="1" inputmode="numeric" />
+    </div>
+
+    <!-- Опции -->
+    <div class="options">
+      <div class="opt">
+        <label><input type="checkbox" id="gps" /> GPS</label>
+        <div class="price">+300 ₽/день</div>
+      </div>
+      <div class="opt">
+        <label><input type="checkbox" id="childseat" /> Детское кресло</label>
+        <div class="price">+200 ₽/день</div>
+      </div>
+      <div class="opt">
+        <label><input type="checkbox" id="driver" /> Доп. водитель</label>
+        <div class="price">+500 ₽/день</div>
+      </div>
+      <div class="opt">
+        <label><input type="checkbox" id="insurance" /> Расширенная страховка</label>
+        <div class="price">+700 ₽/день</div>
+      </div>
+
+      <hr class="divider" />
+
+      <div class="opt">
+        <label><input type="checkbox" id="nospeed" /> Без ограничения скорости</label>
+        <div class="price">+1000 ₽/день</div>
+      </div>
+      <div class="opt">
+        <label><input type="checkbox" id="nomileage" /> Без ограничения по пробегу</label>
+        <div class="price">+800 ₽/день</div>
+      </div>
+      <div class="opt">
+        <label><input type="checkbox" id="protection" /> Защита от неприятностей</label>
+        <div class="price">+1200 ₽/день</div>
+      </div>
+
+      <hr class="divider" />
+
+      <div class="opt">
+        <label><input type="checkbox" id="friend" /> Приведи друга</label>
+        <div class="price">−5%</div>
+      </div>
+      <div class="opt">
+        <label><input type="checkbox" id="birthday" /> День рождения</label>
+        <div class="price">−15%</div>
+      </div>
+    </div>
+
+    <button class="calc" onclick="calculate()">Рассчитать</button>
+
+    <div id="result"></div>
+  </div>
+
+  <script>
+    // Массив автомобилей (замени img на реальные ссылки при интеграции)
+    const cars = [
+  { name: "Эконом — Hyundai Solaris", price: 6000, img: "https://avatars.mds.yandex.net/get-autoru-vos/1932996/607ecbaa91b6bad94e82e5ca567c77d7/1200x900" },
+  { name: "Комфорт — Toyota Corolla", price: 8000, img: "https://i.ytimg.com/vi/cvQUIOkBVH4/maxresdefault.jpg" },
+  { name: "Бизнес — BMW 5 Series", price: 12000, img: "https://avatars.mds.yandex.net/get-autoru-vos/2164639/06720ea57ed9f43650777a74ab5e4e47/1200x900" },
+  { name: "SUV — Toyota RAV4", price: 15000, img: "https://avatars.mds.yandex.net/get-autoru-vos/17394937/075da5709f6aefba0fafa223d28808f2/1200x900" },
+  { name: "Электро — Tesla Model 3", price: 10000, img: "https://i.ytimg.com/vi/K0ziKtKX0yY/maxresdefault.jpg" }
+];
+    let currentCar = 0;
+    let chosenCarIndex = 0;
+
+    function renderCar(i){
+      const c = cars[i];
+      document.getElementById("carImage").src = c.img;
+      document.getElementById("carName").textContent = c.name;
+      document.getElementById("carPrice").textContent = `${c.price.toLocaleString("ru-RU")} ₽/сутки`;
+    }
+    function prevCar(){ currentCar = (currentCar - 1 + cars.length) % cars.length; renderCar(currentCar); }
+    function nextCar(){ currentCar = (currentCar + 1) % cars.length; renderCar(currentCar); }
+    function chooseCar(){
+      chosenCarIndex = currentCar;
+      const btn = document.getElementById("chooseBtn");
+      btn.textContent = "Выбрано";
+      setTimeout(()=>btn.textContent="Выбрать", 1200);
+    }
+
+    function checked(id){ return document.getElementById(id).checked; }
+
+    function calculate(){
+      const daysRaw = parseInt(document.getElementById("days").value);
+      const days = Math.max(1, isNaN(daysRaw) ? 1 : daysRaw);
+
+      const carPrice = cars[chosenCarIndex].price;
+
+      const extrasPerDay =
+        (checked("gps")?300:0) +
+        (checked("childseat")?200:0) +
+        (checked("driver")?500:0) +
+        (checked("insurance")?700:0) +
+        (checked("nospeed")?1000:0) +
+        (checked("nomileage")?800:0) +
+        (checked("protection")?1200:0);
+
+      const baseTotal   = carPrice * days;
+      const extrasTotal = extrasPerDay * days;
+      let total = baseTotal + extrasTotal;
+
+      const applied = [];
+      if (checked("birthday")) {
+        const d = total * 0.15; total -= d;
+        applied.push({label:"День рождения −15%", value:d});
+      }
+      if (checked("friend")) {
+        const d = total * 0.05; total -= d;
+        applied.push({label:"Приведи друга −5%", value:d});
+      }
+
+      const res = document.getElementById("result");
+      res.innerHTML = `
+        <div class="row"><span>Авто</span><span>${cars[chosenCarIndex].name}</span></div>
+        <div class="row"><span>Срок</span><span>${days} дн.</span></div>
+        <div class="row"><span>База</span><span>${baseTotal.toLocaleString("ru-RU")} ₽</span></div>
+        <div class="row"><span>Опции</span><span>${extrasTotal.toLocaleString("ru-RU")} ₽</span></div>
+        ${applied.map(d=>`<div class="row"><span>${d.label}</span><span>−${Math.round(d.value).toLocaleString("ru-RU")} ₽</span></div>`).join("")}
+        <div class="total"><span>Итого</span><span>${Math.round(total).toLocaleString("ru-RU")} ₽</span></div>
+      `;
+      res.scrollIntoView({behavior:"smooth", block:"center"});
+    }
+
+    // Инициализация
+    renderCar(currentCar);
+    chooseCar(); // по умолчанию выбран первый
+  </script>
+</body>
+</html>
